@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "name": "Gabriel",
+    "Role": "Assistant",
+    "email": "gabriel@gmail.com",
+    "phone": "555-454-444",
+    "contacted": true 
+  },
+  {
+    "id": "2",
+    "name": "Gabriel",
+    "Role": "Assistant",
+    "email": "gabriel@gmail.com",
+    "phone": "555-454-444",
+    "contacted": false
+  },
+  {
+    "id": "2",
+    "name": "nacho",
+    "Role": "Assistant",
+    "email": "gabriel@gmail.com",
+    "phone": "555-454-444",
+    "contacted": true
+  }
+]
