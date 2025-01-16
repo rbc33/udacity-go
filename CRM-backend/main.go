@@ -56,7 +56,7 @@ func saveCustomer(customer []Customer) error {
 }
 
 // GetUsersHandler maneja las solicitudes GET /users.
-func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
+func getCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	users, err := getAllCustomers()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -67,7 +67,7 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // AddUserHandler maneja las solicitudes POST /users.
-func AddCustomerHandler(w http.ResponseWriter, r *http.Request) {
+func addCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	var customer Customer
 	if err := json.NewDecoder(r.Body).Decode(&customer); err != nil {
 		http.Error(w, "Invalid data", http.StatusBadRequest)
@@ -117,7 +117,7 @@ func updateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(customer)
 }
 
-func getCustomerHandler(w http.ResponseWriter, r *http.Request) {
+func getCustomerHandlerByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	id := mux.Vars(r)["id"]
@@ -128,20 +128,24 @@ func getCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Flag to track if a match is found
+	var foundCustomer *Customer // Assuming Customer is your struct
 	for _, c := range customers {
 		if c.ID == id {
-			customer := c
-
-			w.WriteHeader(http.StatusNoContent)
-			json.NewEncoder(w).Encode(customer)
-		} else {
-			http.Error(w, "User not found", http.StatusNotFound)
-			return
+			foundCustomer = &c
+			break
 		}
+	}
 
+	// Check if the customer was found
+	if foundCustomer != nil {
+		w.WriteHeader(http.StatusOK) // 200 OK for a successful response
+		json.NewEncoder(w).Encode(foundCustomer)
+	} else {
+		http.Error(w, "User not found", http.StatusNotFound) // 404 Not Found if no match
 	}
 }
-func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
+func deleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
 
@@ -173,14 +177,18 @@ func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 	json.NewEncoder(w).Encode(customers)
 }
-
+func serveHTML(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "HTML")
+}
 func main() {
+	fileServer := http.FileServer(http.Dir("./static"))
 	r := mux.NewRouter()
 
-	r.HandleFunc("/customer", GetCustomerHandler).Methods("GET")
-	r.HandleFunc("/customer", AddCustomerHandler).Methods("POST")
-	r.HandleFunc("/customer/{id}", getCustomerHandler).Methods("GET")
-	r.HandleFunc("/customer/{id}", DeleteCustomerHandler).Methods("DELETE")
+	r.Handle("/", fileServer).Methods("GET")
+	r.HandleFunc("/customer", getCustomerHandler).Methods("GET")
+	r.HandleFunc("/customer", addCustomerHandler).Methods("POST")
+	r.HandleFunc("/customer/{id}", getCustomerHandlerByID).Methods("GET")
+	r.HandleFunc("/customer/{id}", deleteCustomerHandler).Methods("DELETE")
 	r.HandleFunc("/customer/{id}", updateCustomerHandler).Methods("PUT")
 
 	fmt.Println("Server is starting on port 3000...")
